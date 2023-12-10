@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>gametest</title>
+    
+  </head>
+  <body>
+    <div style="display:flex;justify-content:center;align-items: center;">
+      <div style="display:flex;">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </body>
+  <script type="module">
+    // import kaboom lib
+    import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+    //重新開始
+
+    //背景設定
+    kaboom({
+      width:960,
+      height:720,
+      canvas: document.querySelector("canvas"),
+      background:[64,48,82]
+    }
+    );      
+    setGravity(1200);
+    const SPEED=480;
+    var isjump=false
+    var shooting=false
+    var level =0
+    var playerHealth=30
+    //聲音
+    loadSound("koopaMusic","./sound/koopa.mp3")
+    loadSound("sss","./sound/music.mp3")
+    loadSound("shoot","./sound/mm-bullet.wav")
+    loadSound("hitted","./sound/mm-pain.wav")
+    loadSound("background","./sound/boss.mp3")
+    loadSound("bonus","./sound/select.mp3")
+    //角色
+    loadSprite("level1background","level1.png")
+    loadSprite("level2background","level2.png")
+    loadSprite("level3background","level3.png")
+    loadSprite("level4background","Screenshot.webp")
+    loadSprite("gameoverBackground","gameover.png")
+    loadSprite("bullet","mm-lemon.png")
+    loadSprite("bullet2","mm-lemon.png")
+    loadSprite("title","title.png")
+    loadSpriteAtlas("windman.png", {
+        "windman": {
+          x: 0,
+          y: 0,
+          width: 400,
+          height: 46,
+          sliceX: 9,
+          sliceY: 1,
+          anims: {
+              idle: {from:0,to:1,loop:true,speed:3},
+              shoot: 3,
+              wind:{from:4,to:5,loop:true,speed:7},
+              fly:{from:6,to:8,loop:true,speed:3}
+          },  
+        },
+      })
+      loadSpriteAtlas("koopa.png", {
+        "koopa": {
+            x: 0,
+            y: 0,
+            width:450,
+            height: 50,
+            sliceX: 9,
+            sliceY: 1,
+            anims: {
+                idle: { from: 0, to: 3 ,loop:true,speed:5},
+            },
+        },
+    })
+    loadSpriteAtlas("fire.png", {
+         "fire": {
+            x: 0,
+            y: 0,
+            width:74,
+            height:17,
+            sliceX: 2,
+            sliceY: 2,
+             anims: {
+                 idle: { from: 0, to: 1 ,loop:true,speed:6},
+             },
+    },
+    })
+      loadSpriteAtlas("windmanBullet.png",{
+        "windmanBullet":{
+          x:0,
+          y:0,
+          width: 32,
+          height: 16,
+          sliceX:2,
+          sliceY:1,
+          anims:{
+            shooting:{from:0,to:1,loop:true},
+          },
+        },
+      })
+    loadSpriteAtlas("yellow-devil (2).png", {
+    "yellow": {
+      x: 0,
+      y: 0,
+      width: 113,
+      height: 30,
+      sliceX: 4,
+      sliceY: 2,
+      anims: {
+          idle: {from:0,to:6,loop:true,speed:2},
+          ready: 7
+      },
+  
+    },
+  })
+  loadSpriteAtlas("eddie.png", {
+        "eddie": {
+          x: 0,
+          y: 0,
+          width: 117,
+          height: 46,
+          sliceX: 6,
+          sliceY: 1,
+          anims: {
+              idle: {from:3,to:4,loop:true,speed:1},
+              move: {from:0,to:2,loop:true,speed:4},
+              throw: 5,
+          },  
+        },
+      })
+      loadSpriteAtlas("health.png",{
+        "heal":{
+          x:0,
+          y:0,
+          width: 32,
+          height:32,
+          sliceX:2,
+          sleceY:1,
+          anims:{
+            idle:{from:0,to:1,loop:true,speed:3}
+          }
+        }
+      })
+    loadSpriteAtlas("megaman-drew-sheet.png", {
+    "hero": {
+      x: 0,
+      y: 0,
+      width: 320,
+      height: 320,
+      sliceX: 10,
+      sliceY: 10,
+      anims: {
+          idle: 0,
+          run: { from: 3, to: 6 ,loop:true},
+          jump: 7,
+          shoot: 10,
+          runshoot: { from: 13,to: 16 ,loop:true},
+          jumpshoot:17,
+          hurt: 23,
+      },
+  
+    },
+  })
+  loadSpriteAtlas("yellow-devil.png", {
+        "yellowDevil": {
+          x: 0,
+          y: 0,
+          width: 800,
+          height: 255,
+          sliceX: 8,
+          sliceY: 3,
+          anims: {
+              idle: 23,
+              fight: 22,
+              appear:{from: 0,to: 17,speed:2},
+              disappear:{from: 17,to: 0,speed:2},
+          },
+      
+        },
+      })
+  scene("title",()=>{    
+    add([
+      sprite("title"),
+      height(720),
+      width(960),
+      scale(3.65)
+    ])
+    let boss=play("sss",{loop:true,volume:0.4})
+    onKeyDown("space",()=>{
+      boss.paused=true
+      go("level1")
+    })
+  })
+  scene("level1",()=>{
+    loadSound("shoot","./sound/mm-bullet.wav")
+    loadSound("hitted","./sound/mm-pain.wav")
+    loadSound("background","./sound/boss.mp3")
+    let boss=play("background",{loop:true,volume:0.4})
+    add([
+      sprite("level1background"),
+      scale(7)
+    ])
+    let healthBar=add([
+      text(playerHealth),
+      pos(480,480)
+    ])
+    onUpdate(()=>{
+      healthBar.text=playerHealth
+    })
+    add([
+      rect(width(),48),
+      area(),
+      pos(0,0),
+      body({isStatic: true}),
+      "wall"
+    ])
+    add([
+      rect(width(),48),
+      area(),
+      pos(0,height()-48),
+      body({isStatic: true}),
+      "wall"
+    ])
+    add([
+      rect(48,height()),
+      area(),
+      pos(width()-48,0),
+      body({isStatic: true}),
+      "wall"
+    ])
+    add([
+      rect(48,height()),
+      area(),
+      pos(0,0),
+      body({isStatic: true}),
+      "wall"
+    ])
+    let player=add([
+    sprite("hero",{anim:"idle"}),
+    body(),
+    pos(120,360),
+    area({scale:0.85}),
+    scale(3),
+    height(200),
+    width(200),
+    health(playerHealth),
+    offscreen({destory:true}),
+  ])
+    //移動
+    if(!shooting){
+      onKeyDown("left",()=>{
+                  player.move(-SPEED,0)
+                  if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                  player.flipX=false})
+      onKeyDown("right",()=>{
+                    if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                      player.flipX=true
+                      player.move(SPEED,0)})
+      }
+      onKeyDown("z",()=>{
+        if(player.isGrounded()){
+          player.jump()
+          player.play("jump")
+          isjump=true
+        }
+      })
+      if(!isjump){
+      onKeyRelease(()=>{
+        if(isKeyReleased("right")||isKeyReleased("left"))
+          player.play("idle")
+      })}
+      if(player.isGrounded()&&isjump){
+        player.play("idle")
+        isjump=false
+      }
+      onKeyPress("x",()=>{
+        play("shoot")
+        shoot(player.pos.add(40,40))})
+      onKeyDown("x",()=>{
+        if(player.isGrounded()){
+          if(player.curAnim()==="run"){
+            shooting=true
+            if(player.curAnim()!=="runshoot"){player.play("runshoot")}
+          }else{player.play("shoot")}
+        }else{
+          player.play("jumpshoot")
+        }})
+      onKeyRelease(()=>{
+        if(isKeyReleased("x")){
+          player.play("idle")
+          shooting=false
+        }
+      })
+      //血量
+      player.on("hurt",()=>{
+        play("hitted")
+        player.play("hurt")
+        wait(0.5,()=>{player.play("idle")})})
+      player.onCollide("bullet2",(bullet2)=>{
+        destroy(bullet2)
+        player.hurt(10)
+        playerHealth-=10
+      })
+      player.onCollide("enemy",(enemy)=>{
+        player.hurt(10)
+        playerHealth-=10
+      })
+      player.onDeath(()=>{
+        destroy(player)
+        boss.paused=true
+        go("gameover")
+      })
+      //攻擊
+      function shoot(p){
+        if(player.flipX){
+        add([
+          sprite("bullet"),
+          pos(p),
+          move(0,1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet"
+        ])}else{
+          add([
+          sprite("bullet"),
+          pos(p),
+          move(0,-1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet"
+        ])
+        }
+      }
+    //敵人
+      let enemy= add([
+        sprite("hero"),
+        pos(720,360),
+        area({scale:0.85}),
+        body(),
+        scale(3),
+        health(100),
+        state("wait1",["wait1","left","wait2","right","attack"]),
+        "enemy"
+      ])
+        enemy.onStateEnter("wait1",async()=>{
+          if(!player.exists())return
+          if(!enemy.exists())return
+          await wait(0.5)
+          enemy.enterState("left")})
+        enemy.onStateEnter("left",async()=>{
+          if(!player.exists())return
+          if(!enemy.exists())return
+          await wait(1)
+          enemy.enterState("attack")
+        })
+        enemy.onStateEnter("attack",async()=>{
+          if(!player.exists())return
+          if(!enemy.exists())return
+          enemy.play("shoot")
+          if(enemy.flipX){
+            enemy.flipX=false
+          }else{enemy.flipX=true}
+          for(let i=0;i<3;i++){
+            enemyshoot(enemy.pos.add(40,40))
+            await wait(1)}
+          if(enemy.flipX){
+            enemy.enterState("wait2")
+          }else{enemy.enterState("wait1")}
+        })
+        enemy.onStateEnter("wait2",async()=>{
+          if(!player.exists())return
+          if(!enemy.exists())return
+          await wait(0.5)
+          enemy.enterState("right")})
+        enemy.onStateEnter("right",async()=>{
+          if(!player.exists())return
+          if(!enemy.exists())return
+          await wait(1)
+          enemy.enterState("attack")
+        })
+
+
+
+        enemy.onStateUpdate("left",async()=>{
+          enemy.flipX=false
+          if(enemy.curAnim()!=="runshoot"){enemy.play("runshoot")}
+          enemy.move(-600,0)
+        })
+        enemy.onStateUpdate("right",async()=>{
+          enemy.flipX=true
+          if(enemy.curAnim()!=="runshoot"){enemy.play("runshoot")}
+          enemy.move(600,0)
+        })
+      //敵人攻擊
+      function enemyshoot(p){
+        if(enemy.flipX){
+        add([
+          sprite("bullet2"),
+          pos(p),
+          move(0,1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet2"
+        ])}else{
+          add([
+          sprite("bullet2"),
+          pos(p),
+          move(0,-1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet2"
+        ])
+        }
+      }
+      //敵人受傷
+      enemy.onCollide("bullet",(bullet)=>{
+        destroy(bullet)
+        enemy.hurt(10)
+      })
+      enemy.onDeath(()=>{
+        boss.paused=true
+        destroy(enemy)
+        go("level2")
+      })
+    })
+    scene("level2",()=>{
+      loadSound("shoot","./sound/mm-bullet.wav")
+      let boss=play("background",{loop:true,volume:0.4})
+      add([
+        sprite("level2background"),
+        scale(6)
+      ])
+      let healthBar=add([
+        text(playerHealth),
+        pos(480,480)
+      ])
+      onUpdate(()=>{
+        healthBar.text=playerHealth
+      })
+      add([
+      rect(width(),48),
+      area(),
+      pos(0,0),
+      body({isStatic: true}),
+      "wall"
+      ])
+      add([
+        rect(width(),48),
+        area(),
+        pos(0,height()-48),
+        body({isStatic: true}),
+        "wall"
+      ])
+      add([
+        rect(48,height()),
+        area(),
+        pos(width()-48,0),
+        body({isStatic: true}),
+        "wall"
+      ])
+      add([
+        rect(48,height()),
+        area(),
+        pos(0,0),
+        body({isStatic: true}),
+        "wall"
+      ])
+      let player=add([
+        sprite("hero",{anim:"idle"}),
+        body(),
+        pos(120,360),
+        area({scale:0.85}),
+        scale(3),
+        height(200),
+        width(200),
+        health(playerHealth),
+        offscreen({destory:true}),
+      ])
+      onKeyDown("left",()=>{
+                  player.move(-SPEED,0)
+                  if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                  player.flipX=false})
+      onKeyDown("right",()=>{
+                    if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                      player.flipX=true
+                      player.move(SPEED,0)})
+      onKeyDown("z",()=>{
+        if(player.isGrounded()){
+          player.jump()
+          player.play("jump")
+          isjump=true
+        }
+      })
+      if(!isjump){
+      onKeyRelease(()=>{
+        if(isKeyReleased("right")||isKeyReleased("left"))
+          player.play("idle")
+      })}
+      if(player.isGrounded()&&isjump){
+        player.play("idle")
+        isjump=false
+      }
+      onKeyPress("x",()=>{
+        play("shoot")
+        shoot(player.pos.add(40,40))})
+      onKeyDown("x",()=>{
+        if(player.isGrounded()){
+          if(player.curAnim()==="run"){
+            shooting=true
+            if(player.curAnim()!=="runshoot"){player.play("runshoot")}
+          }else{player.play("shoot")}
+        }else{
+          player.play("jumpshoot")
+        }})
+      onKeyRelease(()=>{
+        if(isKeyReleased("x")){
+          player.play("idle")
+          shooting=false
+        }
+      })
+      function shoot(p){
+        if(player.flipX){
+        add([
+          sprite("bullet"),
+          pos(p),
+          move(0,1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet"
+        ])}else{
+          add([
+          sprite("bullet"),
+          pos(p),offscreen({destory:true}),
+          move(0,-1000),
+          anchor("center"),
+          area(),
+          scale(2),
+          "bullet"
+        ])
+        }
+      }
+      
+      player.onCollide("yellow",()=>{
+        player.hurt(5)
+        playerHealth-=5
+      })
+      player.on("hurt",()=>{
+        play("hitted")
+        player.play("hurt")
+        wait(0.5,()=>{player.play("idle")})})
+      player.onDeath(()=>{
+        boss.paused=true
+        destroy(player)
+        go("gameover")
+      })
+      let rightDevil=add([
+        sprite("yellowDevil",{anim:"fight"}),
+        pos(600,415),
+        area({scale:1}),
+        scale(3),
+        height(600),
+        width(600),
+        health(500),
+        state("wait",["wait","disappear","appear"]),
+        "yellowDevel"
+      ])
+      rightDevil.onStateEnter("wait",async()=>{
+          if(!player.exists())return
+          if(!rightDevil.exists())return
+          rightDevil.play("fight")
+          await wait(5)
+          rightDevil.enterState("disappear")})
+      rightDevil.onStateEnter("disappear",async()=>{
+          if(!player.exists())return
+          if(!rightDevil.exists())return
+          rightDevil.play("disappear")
+          let up=add([
+            sprite("yellow",{anim:"idle"}),
+            pos(620,480),
+            anchor("center"),
+            move(0,-200),
+            area(),
+            scale(3),
+            state("shoot",["shoot","stop"]),
+            "yellow"
+          ])
+          await wait(2.5)
+          destroy(up)
+          let down=add([
+            sprite("yellow",{anim:"idle"}),
+            pos(620,620),
+            anchor("center"),
+            move(0,-200),
+            area(),
+            scale(3),
+            state("shoot",["shoot","stop"]),
+            "yellow"
+          ])
+          await wait(2.5)
+          destroy(down)
+          let up2=add([
+            sprite("yellow",{anim:"idle"}),
+            pos(620,480),
+            anchor("center"),
+            move(0,-200),
+            area(),
+            scale(3),
+            state("shoot",["shoot","stop"]),
+            "yellow"
+          ])
+          await wait(2.5)
+          destroy(up2)
+          await wait(2)
+          rightDevil.play("idle")
+          await wait(5)
+          rightDevil.enterState("appear")})
+      rightDevil.onStateEnter("appear",async()=>{
+          if(!player.exists())return
+          if(!rightDevil.exists())return
+          rightDevil.play("appear")
+          await wait(9.5)
+          rightDevil.enterState("wait")})
+
+      let leftDevil=add([
+        sprite("yellowDevil",{anim:"appear"}),
+        pos(50,415),
+        area({scale:1}),
+        scale(3),
+        height(600),
+        width(600),
+        health(500),
+        state("wait",["wait","disappear","appear"]),
+        "yellowDevel"
+      ])
+      leftDevil.onStateEnter("wait",async()=>{
+          if(!player.exists())return
+          if(!leftDevil.exists())return
+          leftDevil.play("idle")
+          await wait(5)
+          leftDevil.enterState("appear")})
+      leftDevil.onStateEnter("disappear",async()=>{
+          if(!player.exists())return
+          if(!leftDevil.exists())return
+          leftDevil.play("disappear")
+          let up=add([
+            sprite("yellow",{anim:"idle"}),
+            pos(240,480),
+            anchor("center"),
+            move(0,200),
+            area(),
+            scale(3),
+            state("shoot",["shoot","stop"]),
+            "yellow"
+          ])
+          await wait(2.5)
+          destroy(up)
+          let down=add([
+            sprite("yellow",{anim:"idle"}),
+            pos(240,620),
+            anchor("center"),
+            move(0,200),
+            area(),
+            scale(3),
+            state("shoot",["shoot","stop"]),
+            "yellow"
+          ])
+          await wait(2.5)
+          destroy(down)
+          let up2=add([
+            sprite("yellow",{anim:"idle"}),
+            pos(240,480),
+            anchor("center"),
+            move(0,200),
+            area(),
+            scale(3),
+            state("shoot",["shoot","stop"]),
+            "yellow"
+          ])
+          await wait(2.5)
+          destroy(up2)
+          await wait(2)
+          leftDevil.enterState("wait")})
+      leftDevil.onStateEnter("appear",async()=>{
+          if(!player.exists())return
+          if(!leftDevil.exists())return
+          leftDevil.play("appear")
+          await wait(9)
+          leftDevil.play("fight")
+          await wait(5)
+          leftDevil.enterState("disappear")})
+      rightDevil.flipX=true
+      if(rightDevil.curAnim()==="fight")
+        rightDevil.onCollide("bullet",(bullet)=>{
+        rightDevil.hurt(10)
+        })
+      if(leftDevil.curAnim()==="fight")
+        leftDevil.onCollide("bullet",(bullet)=>{
+        lefttDevil.hurt(10)
+        })
+      rightDevil.onDeath(()=>{
+        boss.paused=true
+        destroy(rightDevil)
+        destroy(leftDevil)
+        go("level3")
+      })
+  })
+  scene("level3",()=>{
+    let wind="no"
+    let fly="no"
+    let boss=play("background",{loop:true,volume:0.4})
+    add([
+      sprite("level3background"),
+      pos(35,-50),
+      scale(3.7)
+    ])
+    let healthBar=add([
+      text(playerHealth),
+      pos(480,480)
+    ])
+    onUpdate(()=>{
+      healthBar.text=playerHealth
+    })
+    add([
+      rect(width(),48),
+      area(),
+      pos(0,0),
+      body({isStatic: true}),
+      "wall"
+      ])
+      add([
+        rect(width(),48),
+        area(),
+        pos(0,height()-48),
+        body({isStatic: true}),
+        "wall"
+      ])
+      add([
+        rect(48,height()),
+        area(),
+        pos(width()-48,0),
+        body({isStatic: true}),
+        "wall"
+      ])
+      add([
+        rect(48,height()),
+        area(),
+        pos(0,0),
+        body({isStatic: true}),
+        "wall"
+      ])
+      let player=add([
+        sprite("hero",{anim:"idle"}),
+        body(),
+        pos(120,360),
+        area({scale:0.85}),
+        scale(3),
+        height(200),
+        width(200),
+        health(playerHealth),
+        offscreen({destory:true}),
+        "player"
+      ])
+      onKeyDown("left",()=>{
+                  player.move(-SPEED,0)
+                  if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                  player.flipX=false})
+      onKeyDown("right",()=>{
+                    if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                      player.flipX=true
+                      player.move(SPEED,0)})
+      onKeyDown("z",()=>{
+        if(player.isGrounded()){
+          player.jump()
+          player.play("jump")
+          isjump=true
+        }
+      })
+      if(!isjump){
+      onKeyRelease(()=>{
+        if(isKeyReleased("right")||isKeyReleased("left"))
+          player.play("idle")
+      })}
+      if(player.isGrounded()&&isjump){
+        player.play("idle")
+        isjump=false
+      }
+      onKeyPress("x",()=>{
+        play("shoot")
+        shoot(player.pos.add(40,40))})
+      onKeyDown("x",()=>{
+        if(player.isGrounded()){
+          if(player.curAnim()==="run"){
+            shooting=true
+            if(player.curAnim()!=="runshoot"){player.play("runshoot")}
+          }else{player.play("shoot")}
+        }else{
+          player.play("jumpshoot")
+        }})
+      onKeyRelease(()=>{
+        if(isKeyReleased("x")){
+          player.play("idle")
+          shooting=false
+        }
+      })
+      function shoot(p){
+        if(player.flipX){
+        add([
+          sprite("bullet"),            
+          pos(p),
+          move(0,1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet"
+        ])}else{
+          add([
+          sprite("bullet"),
+          pos(p),
+          offscreen({destory:true}),
+          move(0,-1000),
+          anchor("center"),
+          area(),
+          scale(2),            
+          "bullet"
+        ])
+        }
+      }
+      //風
+      onUpdate("player",(player)=>{
+        if(wind==="right"){
+          player.move(400,0)
+        }else if(wind==="left"){
+          player.move(-400,0)
+        }else(wind==="no")
+          player.move(0,0)
+        })
+    let windman=add([
+      sprite("windman",{anim:"idle"}),
+      pos(750,533),
+      scale(3),
+      area({scale:0.85}),
+      health(300),
+      state("idle",["idle","shoot","wind","fly"]),
+      "windman"
+    ])
+    windman.onStateEnter("idle",async()=>{
+      if(!player.exists())return
+      if(!windman.exists())return
+      windman.play("idle")
+      await wait(1)
+      windman.enterState("wind")
+    })
+    windman.onStateEnter("wind",async()=>{
+      if(!player.exists())return
+      if(!windman.exists())return
+      windman.play("wind")
+      if(windman.flipX){
+        wind="left"
+      }else{
+        wind="right"
+      }
+      await wait(7)
+      wind="no"
+      windman.play("idle")
+      windman.enterState("shoot")
+    })
+    windman.onStateEnter("shoot",async()=>{
+      if(!player.exists())return
+      if(!windman.exists())return
+      windman.play("shoot")
+      if(windman.flipX){
+        add([
+          sprite("windmanBullet",{anim:"shooting"}),
+          pos(windman.pos.add(0,70)),
+          move(0,1500),
+          offscreen({destory:true}),
+          anchor("center"),
+          area(),
+          scale(4),            
+          "windmanBullet"
+        ])
+      }else{
+        add([
+          sprite("windmanBullet",{anim:"shooting"}),
+          pos(windman.pos.add(0,70)),
+          move(0,-1500),
+          offscreen({destory:true}),
+          anchor("center"),
+          area(),
+          scale(4),            
+          "windmanBullet"
+        ])
+      }
+      await wait(0.8)
+      windman.play("idle")
+      windman.enterState("fly")
+    })
+    windman.onStateEnter("fly",async()=>{
+      if(!player.exists())return
+      if(!windman.exists())return
+      windman.play("fly")
+      await wait(1.2)
+      while(windman.pos.y>433){
+        windman.pos.y=windman.pos.y-10
+        await wait(0.1)
+      }
+      await wait(0.2)
+      if(windman.flipX){
+        while(windman.pos.x<750){
+          windman.pos.x+=20
+          await wait(0.03)}
+        windman.flipX=false
+        await wait(0.3)
+      }else{
+        while(windman.pos.x>50){
+          windman.pos.x-=20
+          await wait(0.03)}
+          windman.flipX=true
+          await wait(0.3)}    
+        while(windman.pos.y!=533){
+          windman.pos.y+=10
+          await wait(0.05)
+          }
+      windman.play("idle")
+      await wait(1)
+      windman.enterState("idle")
+    })
+
+    windman.onCollide("bullet",(bullet)=>{
+      destroy(bullet)
+      windman.hurt(10)
+    })
+    windman.onDeath(()=>{
+      boss.paused=true
+      destroy(windman)
+      go("bonus")
+    })
+
+    player.on("hurt",()=>{
+        play("hitted")
+        player.play("hurt")
+        wait(0.5,()=>{
+          player.play("idle")})})
+      player.onCollide("windman",()=>{
+        player.hurt(20)
+        playerHealth-=20
+      })
+      player.onCollide("windmanBullet",(windmanBullet)=>{
+        destroy(windmanBullet)
+        player.hurt(5)
+        playerHealth-=5
+      })
+      player.onDeath(()=>{
+        boss.paused=true
+        destroy(player)
+        go("gameover")
+      })
+  })
+  scene("level4",()=>{
+    let boss=play("koopaMusic",{loop:true,volume:0.4})
+    add([
+      sprite("level4background"),
+      pos(-750,-10),
+      scale(1.6)
+    ])
+    let healthBar=add([
+      text(playerHealth),
+      pos(480,480)
+    ])
+    onUpdate(()=>{
+      healthBar.text=playerHealth
+    })
+    add([
+      rect(width(),48),
+      area(),
+      pos(0,0),
+      body({isStatic: true}),
+      "wall"
+    ])
+    add([
+      rect(width(),48),
+      area(),
+      pos(0,height()-48),
+      body({isStatic: true}),
+      "wall"
+    ])
+    add([
+      rect(48,height()),
+      area(),
+      pos(width()-48,0),
+      body({isStatic: true}),
+      "wall"
+    ])
+    add([
+      rect(48,height()),
+      area(),
+      pos(0,0),
+      body({isStatic: true}),
+      "wall"
+    ])
+    let player=add([
+    sprite("hero",{anim:"idle"}),
+    body(),
+    pos(120,360),
+    area({scale:0.85}),
+    scale(3),
+    height(200),
+    width(200),
+    health(playerHealth),
+    offscreen({destory:true}),
+  ])
+    //移動
+    if(!shooting){
+      onKeyDown("left",()=>{
+                  player.move(-SPEED,0)
+                  if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                  player.flipX=false})
+      onKeyDown("right",()=>{
+                    if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                      player.flipX=true
+                      player.move(SPEED,0)})
+      }
+      onKeyDown("z",()=>{
+        if(player.isGrounded()){
+          player.jump()
+          player.play("jump")
+          isjump=true
+        }
+      })
+      if(!isjump){
+      onKeyRelease(()=>{
+        if(isKeyReleased("right")||isKeyReleased("left"))
+          player.play("idle")
+      })}
+      if(player.isGrounded()&&isjump){
+        player.play("idle")
+        isjump=false
+      }
+      onKeyPress("x",()=>{
+        play("shoot")
+        shoot(player.pos.add(40,40))})
+      onKeyDown("x",()=>{
+        if(player.isGrounded()){
+          if(player.curAnim()==="run"){
+            shooting=true
+            if(player.curAnim()!=="runshoot"){player.play("runshoot")}
+          }else{player.play("shoot")}
+        }else{
+          player.play("jumpshoot")
+        }})
+      onKeyRelease(()=>{
+        if(isKeyReleased("x")){
+          player.play("idle")
+          shooting=false
+        }
+      })
+      //血量
+      player.on("hurt",()=>{
+        play("hitted")
+        player.play("hurt")
+        wait(0.5,()=>{player.play("idle")})})
+      player.onCollide("koopa",()=>{
+        player.hurt(2)
+        playerHealth-=2
+      })
+      player.onCollide("fire",(fire)=>{
+        destroy(fire)
+        player.hurt(2)
+        playerHealth-=2
+      })
+      player.onDeath(()=>{
+        boss.paused=true
+        destroy(player)
+        go("gameover")
+      })
+      //攻擊
+      function shoot(p){
+        if(player.flipX){
+        add([
+          sprite("bullet"),
+          pos(p),
+          move(0,1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet"
+        ])}else{
+          add([
+          sprite("bullet"),
+          pos(p),
+          move(0,-1000),
+          anchor("center"),
+          area(),
+          offscreen({destory:true}),
+          scale(2),
+          "bullet"
+        ])
+        }
+      }
+    const koopa = add([
+        sprite("koopa", { anim: "idle" }),
+        pos(700, 0),
+        scale(3),
+        area(),
+        body(),
+        health(250),
+        state("idle",["idle","jump","move"]),
+        "koopa"
+        ]);
+    koopa.flipX=true
+    koopa.onStateEnter("idle",async()=>{
+      if(!koopa.exists())return
+      if(!player.exists())return
+        await wait(1.5)
+        koopa.enterState("jump")
+    })
+
+    koopa.onStateEnter("jump",async()=>{
+      if(!koopa.exists())return
+      if(!player.exists())return
+        if(koopa.isGrounded()){
+            koopa.jump()}
+        await wait(1.5)
+        koopa.enterState("idle")
+        const fire = add([
+            sprite("fire", { anim: "idle" }),
+            pos(koopa.pos.add(80)),
+            scale(4),
+            move(0,-200),
+            area({scale:0.8}),
+            offscreen({destory:true}),
+            "fire"
+            ]);
+        await wait(1.5)
+        koopa.enterState("move")
+    })
+    koopa.onStateEnter("move",async()=>{
+      if(!koopa.exists())return
+      if(!player.exists())return
+        await wait(0.01)
+        for(let i=0;i<50;i++){
+            koopa.pos.x-=5
+            await wait(0.01)
+        }
+        await wait(0.01)
+        for(let i=0;i<50;i++){
+            koopa.pos.x+=5
+            await wait(0.01)
+        }
+        koopa.enterState("idle")
+    })
+    koopa.onCollide("bullet",(bullet)=>{
+      destroy(bullet)
+      koopa.hurt(10)
+    })
+    koopa.onDeath(()=>{
+      
+
+      boss.paused=true
+      go("level1")
+    })
+  })
+  scene("bonus",()=>{
+    let bonus=play("bonus",{loop:true,volume:0.4})
+    let healthBar=add([
+      text(playerHealth),
+      pos(480,480)
+    ])
+    onUpdate(()=>{
+      healthBar.text=playerHealth
+    })
+    add([
+      rect(width(),48),
+      area(),
+      pos(0,0),
+      body({isStatic: true}),
+      "wall"
+      ])
+      add([
+        rect(width(),48),
+        area(),
+        pos(0,height()-48),
+        body({isStatic: true}),
+        "wall"
+      ])
+      add([
+        rect(48,height()),
+        area(),
+        pos(width()-48,0),
+        body({isStatic: true}),
+        "wall"
+      ])
+      add([
+        rect(48,height()),
+        area(),
+        pos(0,0),
+        body({isStatic: true}),
+        "wall"
+      ])
+      let player=add([
+        sprite("hero",{anim:"idle"}),
+        body(),
+        pos(120,360),
+        area({scale:0.85}),
+        scale(3),
+        height(200),
+        width(200),
+        health(playerHealth),
+        offscreen({destory:true}),
+        "player"
+      ])
+      onKeyDown("left",()=>{
+                  player.move(-SPEED,0)
+                  if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                  player.flipX=false})
+      onKeyDown("right",()=>{
+                    if(player.curAnim()!=="run"&&player.isGrounded()){player.play("run")}
+                      player.flipX=true
+                      player.move(SPEED,0)})
+      onKeyDown("z",()=>{
+        if(player.isGrounded()){
+          player.jump()
+          player.play("jump")
+          isjump=true
+        }
+      })
+      if(!isjump){
+      onKeyRelease(()=>{
+        if(isKeyReleased("right")||isKeyReleased("left"))
+          player.play("idle")
+      })}
+      if(player.isGrounded()&&isjump){
+        player.play("idle")
+        isjump=false
+      }
+      let eddie=add([
+        sprite("eddie",{anim:"idle"}),
+        pos(850,615),
+        scale(2),
+        state("idle",["idle","move","throw"])
+      ])
+      eddie.onStateEnter("idle",async()=>{
+        await wait(2)
+        eddie.enterState("move")
+      })
+      eddie.onStateEnter("move",async()=>{
+        eddie.play("move")
+        for(let i=0;i<30;i++){
+          eddie.pos.x-=15
+          await wait(0.1)}
+        eddie.enterState("throw")
+      })
+      eddie.onStateEnter("throw",async()=>{
+        eddie.play("throw")
+        let healer=add([
+          sprite("heal",{anim:"idle"}),
+          pos(400,620),
+          body(),
+          width(30),
+          height(30),
+          area({scale:0.45}),
+          scale(2),
+          "healer"
+        ])
+        await wait(2)
+        eddie.play("idle")
+      })
+    player.onCollide("healer",async(healer)=>{
+      player.heal(5)
+      playerHealth+=5
+      destroy(healer)
+      await wait(2)
+      bonus.paused=true
+      go("level4")
+    })
+  })
+  scene("gameover",()=>{
+    add([
+      sprite("gameoverBackground"),
+      scale(1.5)
+    ])
+      add([
+        text("You Dead!Press R to restart."),
+        pos(center()),
+        anchor("center")
+      ])
+      onKeyPress("r",()=>{
+        go("level1")
+        playerHealth=30
+      })
+    })
+    
+  go("level4")
+  </script>
+</html>
+
+
